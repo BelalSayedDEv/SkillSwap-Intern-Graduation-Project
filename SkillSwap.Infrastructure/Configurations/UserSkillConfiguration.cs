@@ -12,11 +12,11 @@ public class UserSkillConfiguration : IEntityTypeConfiguration<UserSkill>
 
         builder.Property(x => x.Type)
             .IsRequired()
-            .HasMaxLength(10);
+            .HasConversion<int>();
 
         builder.Property(x => x.Level)
             .IsRequired()
-            .HasMaxLength(20);
+            .HasConversion<int>();
 
         builder.HasOne(x => x.User)
             .WithMany(u => u.Skills)
@@ -27,6 +27,8 @@ public class UserSkillConfiguration : IEntityTypeConfiguration<UserSkill>
             .WithMany()
             .HasForeignKey(x => x.SkillId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => new { x.UserId, x.SkillId, x.Type }).IsUnique();
 
         builder.HasQueryFilter(x => !x.IsDeleted);
     }

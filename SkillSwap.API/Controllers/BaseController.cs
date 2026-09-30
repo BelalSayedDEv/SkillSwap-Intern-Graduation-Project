@@ -22,6 +22,26 @@ public class BaseController : ControllerBase
             ErrorType.NotFound => NotFound(errorResponse),
             ErrorType.Conflict => Conflict(errorResponse),
             ErrorType.Validation => BadRequest(errorResponse),
+            ErrorType.Unauthorized => Unauthorized(errorResponse),
+            _ => BadRequest(errorResponse)
+        };
+    }
+
+    protected IActionResult HandleResult(Result result)
+    {
+        if (result.IsSuccess)
+        {
+            return Ok(ApiResponse<string>.Success("Operation completed successfully"));
+        }
+
+        var errorResponse = ApiResponse<string>.Failure(result.ErrorMessage);
+
+        return result.ErrorType switch
+        {
+            ErrorType.NotFound => NotFound(errorResponse),
+            ErrorType.Conflict => Conflict(errorResponse),
+            ErrorType.Validation => BadRequest(errorResponse),
+            ErrorType.Unauthorized => Unauthorized(errorResponse),
             _ => BadRequest(errorResponse)
         };
     }

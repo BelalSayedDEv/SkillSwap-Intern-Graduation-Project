@@ -19,3 +19,21 @@ public class Result<T>
 
     public static Result<T> Failure(ErrorType type, string message) => new(false, default, message, type);
 }
+
+public class Result
+{
+    public bool IsSuccess { get; }
+    public string ErrorMessage { get; }
+    public ErrorType ErrorType { get; }
+
+    private Result(bool isSuccess, string errorMessage, ErrorType errorType)
+    {
+        IsSuccess = isSuccess;
+        ErrorMessage = errorMessage;
+        ErrorType = errorType;
+    }
+
+    public static Result Success() => new(true, string.Empty, ErrorType.None);
+
+    public static Result Failure(ErrorType type, string message) => new(false, message, type);
+}

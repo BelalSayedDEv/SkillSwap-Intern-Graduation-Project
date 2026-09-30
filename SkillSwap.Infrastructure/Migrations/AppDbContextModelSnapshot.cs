@@ -290,16 +290,16 @@ namespace SkillSwap.Infrastructure.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("ReplacedByTokenHash")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<DateTime?>("RevokedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("TokenHash")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -308,6 +308,13 @@ namespace SkillSwap.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("FamilyId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
 
                     b.HasIndex("UserId");
 
@@ -342,11 +349,11 @@ namespace SkillSwap.Infrastructure.Migrations
                     b.Property<Guid>("SenderId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("SkillOfferedId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("SkillOfferedId")
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("SkillWantedId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("SkillWantedId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -472,12 +479,14 @@ namespace SkillSwap.Infrastructure.Migrations
 
             modelBuilder.Entity("SkillSwap.Domain.Skills.Skill", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("CategoryId")
-                        .HasColumnType("uniqueidentifier");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -501,16 +510,19 @@ namespace SkillSwap.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("CategoryId", "Name")
+                        .IsUnique();
 
                     b.ToTable("Skills", (string)null);
                 });
 
             modelBuilder.Entity("SkillSwap.Domain.Skills.SkillCategory", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -535,6 +547,9 @@ namespace SkillSwap.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Name")
+                        .IsUnique();
+
                     b.ToTable("SkillCategories", (string)null);
                 });
 
@@ -553,18 +568,14 @@ namespace SkillSwap.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Level")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("SkillId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("SkillId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -576,7 +587,8 @@ namespace SkillSwap.Infrastructure.Migrations
 
                     b.HasIndex("SkillId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "SkillId", "Type")
+                        .IsUnique();
 
                     b.ToTable("UserSkills", (string)null);
                 });

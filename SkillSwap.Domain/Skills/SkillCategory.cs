@@ -2,7 +2,7 @@ namespace SkillSwap.Domain.Skills;
 
 using SkillSwap.Domain.Common;
 
-public class SkillCategory : BaseEntity
+public class SkillCategory : BaseEntity<int>
 {
     public string Name { get; set; } = string.Empty;
     public string? IconUrl { get; set; }

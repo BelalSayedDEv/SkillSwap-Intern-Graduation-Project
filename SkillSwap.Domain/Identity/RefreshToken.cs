@@ -11,4 +11,8 @@ public class RefreshToken : BaseEntity
     public DateTime? RevokedAt { get; set; }
     public string? ReplacedByTokenHash { get; set; }
     public string FamilyId { get; set; } = string.Empty;
+
+    public bool IsExpired => ExpiresAt < DateTime.UtcNow;
+    public bool IsRevoked => RevokedAt != null;
+    public bool IsActive => !IsRevoked && !IsExpired;
 }

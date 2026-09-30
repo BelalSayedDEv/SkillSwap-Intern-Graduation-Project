@@ -7,8 +7,8 @@ public class UserSkill : BaseEntity
 {
     public Guid UserId { get; set; }
     public ApplicationUser User { get; set; } = null!;
-    public Guid SkillId { get; set; }
+    public int SkillId { get; set; }
     public Skill Skill { get; set; } = null!;
-    public string Type { get; set; } = "Teach"; // Teach or Learn
-    public string Level { get; set; } = "Beginner";
+    public SkillType Type { get; set; } = SkillType.Teach;
+    public SkillLevel Level { get; set; } = SkillLevel.Beginner;
 }

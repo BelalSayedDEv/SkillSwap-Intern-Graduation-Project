@@ -10,6 +10,9 @@ public class SkillConfiguration : IEntityTypeConfiguration<Skill>
     {
         builder.ToTable("Skills");
 
+        builder.HasKey(s => s.Id);
+        builder.Property(s => s.Id).UseIdentityColumn();
+
         builder.Property(s => s.Name)
             .IsRequired()
             .HasMaxLength(100);
@@ -18,6 +21,8 @@ public class SkillConfiguration : IEntityTypeConfiguration<Skill>
             .WithMany(c => c.Skills)
             .HasForeignKey(s => s.CategoryId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(s => new { s.CategoryId, s.Name }).IsUnique();
 
         builder.HasQueryFilter(s => !s.IsDeleted);
     }
