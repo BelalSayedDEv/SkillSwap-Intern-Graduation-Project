@@ -30,23 +30,7 @@ Built during a .NET Backend internship at CodePlus (Jul 2026 – Sep 2026).
 Auth model: `ActiveUserOnly` policy (active, non-deleted users) + `AdminOnly` role policy.
 Accepting a swap consumes one session from the acceptor's monthly quota (Free 5 / Premium 30).
 
-## How to run
 
-Prerequisites: .NET 9 SDK, SQL Server LocalDB.
-
-```powershell
-# 1. Dev JWT secret (never committed — validated on startup, min 32 chars)
-dotnet user-secrets set "Jwt:SecretKey" "<32+ random chars>" --project SkillSwap.API/SkillSwap.API.csproj
-
-# 2. Create / migrate the database
-dotnet ef database update --project SkillSwap.Infrastructure --startup-project SkillSwap.API
-
-# 3. Run (Development)
-dotnet run --project SkillSwap.API/SkillSwap.API.csproj --launch-profile http
-
-# Swagger:
-http://localhost:5055/swagger/index.html
-```
 
 ## Caching (skills catalog, L1)
 
