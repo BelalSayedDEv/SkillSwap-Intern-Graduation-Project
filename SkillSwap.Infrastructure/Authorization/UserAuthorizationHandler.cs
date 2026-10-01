@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using SkillSwap.Domain.Identity;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace SkillSwap.Infrastructure.Authorization
 {
@@ -15,7 +16,9 @@ namespace SkillSwap.Infrastructure.Authorization
         }
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, UserRequirement requirement)
         {
-            var userId = context.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            // NOTE: JwtBearer maps "sub" -> NameIdentifier by default inbound mapping.
+            var userId = context.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+                ?? context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(userId))
             {
