@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using SkillSwap.Application.Common.Interfaces;
 using SkillSwap.Application.Common.Models;
 using SkillSwap.Application.Skills.DTOs;
@@ -9,10 +11,14 @@ namespace SkillSwap.Application.Skills.Services;
 public class SkillModerationService : ISkillModerationService
 {
     private readonly IUnitOfWork _uow;
+    private readonly IMemoryCache _cache;
+    private readonly ILogger<SkillModerationService> _logger;
 
-    public SkillModerationService(IUnitOfWork uow)
+    public SkillModerationService(IUnitOfWork uow, IMemoryCache cache, ILogger<SkillModerationService> logger)
     {
         _uow = uow;
+        _cache = cache;
+        _logger = logger;
     }
 
     public async Task<Result<RequestedSkillDto>> RequestSkillAsync(RequestSkillRequest request, CancellationToken cancellationToken = default)
@@ -40,6 +46,7 @@ public class SkillModerationService : ISkillModerationService
 
         await _uow.CompleteAsync(cancellationToken);
 
+
         return Result<RequestedSkillDto>.Success(new RequestedSkillDto(entity.Id, entity.Name, entity.CategoryId, category.Name, entity.CreatedAt));
     }
 
@@ -63,6 +70,7 @@ public class SkillModerationService : ISkillModerationService
     public async Task<Result<SkillDto>> ApproveAsync(int id, CancellationToken cancellationToken = default)
     {
         var entity = await _uow.Skills.GetPendingByIdAsync(id, cancellationToken);
+
         if (entity is null)
             return Result<SkillDto>.Failure(ErrorType.NotFound, "Pending skill request not found.");
 
@@ -70,6 +78,10 @@ public class SkillModerationService : ISkillModerationService
         entity.UpdatedAt = DateTime.UtcNow;
 
         await _uow.CompleteAsync(cancellationToken);
+
+        SkillCatalogCacheKeys.InvalidateCatalog(_cache);
+
+        _logger.LogInformation("cache.invalidate approve {SkillId}", id);
 
         return Result<SkillDto>.Success(new SkillDto(entity.Id, entity.Name, entity.CategoryId, entity.Category.Name));
     }
@@ -86,6 +98,10 @@ public class SkillModerationService : ISkillModerationService
         entity.UpdatedAt = now;
 
         await _uow.CompleteAsync(cancellationToken);
+
+        SkillCatalogCacheKeys.InvalidateCatalog(_cache);
+        _logger.LogInformation("cache.invalidate reject {SkillId}", id);
+
         return Result.Success();
     }
 }

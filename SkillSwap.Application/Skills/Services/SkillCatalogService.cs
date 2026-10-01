@@ -1,25 +1,63 @@
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using SkillSwap.Application.Common.Interfaces;
 using SkillSwap.Application.Common.Models;
 using SkillSwap.Application.Skills.DTOs;
 using SkillSwap.Application.Skills.Interfaces;
-using SkillSwap.Domain.Skills;
+using System.Collections.Concurrent;
 
 namespace SkillSwap.Application.Skills.Services;
 
 public class SkillCatalogService : ISkillCatalogService
 {
-    private readonly IUnitOfWork _uow;
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> _keyLocks = new();
 
-    public SkillCatalogService(IUnitOfWork uow)
+    private readonly IUnitOfWork _uow;
+    private readonly IMemoryCache _cache;
+    private readonly ILogger<SkillCatalogService> _logger;
+
+    public SkillCatalogService(IUnitOfWork uow, IMemoryCache cache, ILogger<SkillCatalogService> logger)
     {
         _uow = uow;
+        _cache = cache;
+        _logger = logger;
     }
 
     public async Task<Result<IReadOnlyList<CategoryDto>>> ListCategoriesAsync(CancellationToken cancellationToken = default)
     {
-        var categories = await _uow.SkillCategories.ListOrderedAsync(cancellationToken);
-        var dtos = categories.Select(c => new CategoryDto(c.Id, c.Name, c.IconUrl)).ToList();
-        return Result<IReadOnlyList<CategoryDto>>.Success(dtos);
+        var key = SkillCatalogCacheKeys.CategoriesKey;
+
+        if (_cache.TryGetValue(key, out IReadOnlyList<CategoryDto>? cached) && cached is not null)
+        {
+            _logger.LogInformation("cache.hit {Key}", key);
+            return Result<IReadOnlyList<CategoryDto>>.Success(cached);
+        }
+
+        var gate = _keyLocks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+
+        await gate.WaitAsync(cancellationToken);
+
+        try
+        {
+            if (_cache.TryGetValue(key, out cached) && cached is not null)
+            {
+                _logger.LogInformation("cache.hit-after-wait {Key}", key);
+                return Result<IReadOnlyList<CategoryDto>>.Success(cached);
+            }
+
+            _logger.LogInformation("cache.miss {Key}", key);
+
+            var categories = await _uow.SkillCategories.ListOrderedAsync(cancellationToken);
+            var dtos = categories.Select(c => new CategoryDto(c.Id, c.Name, c.IconUrl)).ToList();
+
+
+            _cache.Set(key, (IReadOnlyList<CategoryDto>)dtos, SkillCatalogCacheKeys.CategoriesTtl);
+            return Result<IReadOnlyList<CategoryDto>>.Success(dtos);
+        }
+        finally
+        {
+            gate.Release();
+        }
     }
 
     public async Task<Result<PagedResult<SkillDto>>> ListApprovedSkillsAsync(int? categoryId, int page, int pageSize, CancellationToken cancellationToken = default)
@@ -27,8 +65,42 @@ public class SkillCatalogService : ISkillCatalogService
         var paging = NormalizePaging(page, pageSize);
         if (paging is not null) return paging;
 
-        var paged = await _uow.Skills.GetPagedApprovedAsync(categoryId, page, pageSize, cancellationToken);
-        return Result<PagedResult<SkillDto>>.Success(MapSkills(paged));
+        var version = SkillCatalogCacheKeys.ReadApprovedVersion(_cache);
+
+        var key = SkillCatalogCacheKeys.BuildApprovedKey(version, categoryId, page, pageSize);
+
+        if (_cache.TryGetValue(key, out PagedResult<SkillDto>? cached) && cached is not null)
+        {
+            _logger.LogInformation("cache.hit {Key}", key);
+            return Result<PagedResult<SkillDto>>.Success(cached);
+        }
+
+        var gate = _keyLocks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+
+        await gate.WaitAsync(cancellationToken);
+
+        try
+        {
+            if (_cache.TryGetValue(key, out cached) && cached is not null)
+            {
+                _logger.LogInformation("cache.hit-after-wait {Key}", key);
+                return Result<PagedResult<SkillDto>>.Success(cached);
+            }
+
+            _logger.LogInformation("cache.miss {Key}", key);
+
+            var paged = await _uow.Skills.GetPagedApprovedAsync(categoryId, page, pageSize, cancellationToken);
+
+            var result = MapSkills(paged);
+
+            _cache.Set(key, result, SkillCatalogCacheKeys.ApprovedPageTtl);
+
+            return Result<PagedResult<SkillDto>>.Success(result);
+        }
+        finally
+        {
+            gate.Release();
+        }
     }
 
     public async Task<Result<PagedResult<SkillDto>>> SearchSkillsAsync(string query, int page, int pageSize, CancellationToken cancellationToken = default)
@@ -43,14 +115,6 @@ public class SkillCatalogService : ISkillCatalogService
         return Result<PagedResult<SkillDto>>.Success(MapSkills(paged));
     }
 
-
-
-
-
-
-
-
-
     // helpers
     private static Result<PagedResult<SkillDto>>? NormalizePaging(int page, int pageSize)
     {
@@ -61,7 +125,7 @@ public class SkillCatalogService : ISkillCatalogService
         return null;
     }
 
-    private static PagedResult<SkillDto> MapSkills(PagedResult<Skill> paged)
+    private static PagedResult<SkillDto> MapSkills(PagedResult<Domain.Skills.Skill> paged)
     {
         return new PagedResult<SkillDto>
         {
