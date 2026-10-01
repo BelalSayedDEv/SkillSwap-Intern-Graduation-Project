@@ -20,6 +20,10 @@ public class FavoriteUserConfiguration : IEntityTypeConfiguration<FavoriteUser>
             .HasForeignKey(f => f.FavoritedId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasIndex(f => new { f.UserId, f.FavoritedId })
+            .IsUnique()
+            .HasFilter("[IsDeleted] = 0");
+
         builder.HasQueryFilter(f => !f.IsDeleted);
     }
 }

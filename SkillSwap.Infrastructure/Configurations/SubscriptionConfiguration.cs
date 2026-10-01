@@ -12,12 +12,14 @@ public class SubscriptionConfiguration : IEntityTypeConfiguration<Subscription>
 
         builder.Property(s => s.PlanType)
             .IsRequired()
-            .HasMaxLength(20);
+            .HasConversion<int>();
 
         builder.HasOne(s => s.User)
             .WithMany(u => u.Subscriptions)
             .HasForeignKey(s => s.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(s => new { s.UserId, s.IsActive });
 
         builder.HasQueryFilter(s => !s.IsDeleted);
     }

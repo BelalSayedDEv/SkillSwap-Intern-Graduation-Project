@@ -16,5 +16,5 @@ public class SwapRequest : BaseEntity
     public Skill SkillWanted { get; set; } = null!;
     public Guid? ScheduledSessionId { get; set; }
     public string? Message { get; set; }
-    public string Status { get; set; } = "Pending";
+    public SwapStatus Status { get; set; } = SwapStatus.Pending;
 }

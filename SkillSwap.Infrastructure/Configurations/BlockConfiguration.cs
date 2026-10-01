@@ -20,6 +20,10 @@ public class BlockConfiguration : IEntityTypeConfiguration<Block>
             .HasForeignKey(x => x.BlockedId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasIndex(x => new { x.BlockerId, x.BlockedId })
+            .IsUnique()
+            .HasFilter("[IsDeleted] = 0");
+
         builder.HasQueryFilter(x => !x.IsDeleted);
     }
 }

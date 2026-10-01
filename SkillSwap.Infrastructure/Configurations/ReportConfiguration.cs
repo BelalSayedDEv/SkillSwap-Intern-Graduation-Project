@@ -19,7 +19,7 @@ public class ReportConfiguration : IEntityTypeConfiguration<Report>
 
         builder.Property(r => r.Status)
             .IsRequired()
-            .HasMaxLength(20);
+            .HasConversion<int>();
 
         builder.HasOne(r => r.Reporter)
             .WithMany(u => u.ReportsMade)

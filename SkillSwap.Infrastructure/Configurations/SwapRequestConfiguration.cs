@@ -12,7 +12,7 @@ public class SwapRequestConfiguration : IEntityTypeConfiguration<SwapRequest>
 
         builder.Property(s => s.Status)
             .IsRequired()
-            .HasMaxLength(20);
+            .HasConversion<int>();
 
         builder.Property(s => s.Message)
             .HasMaxLength(1000);
@@ -36,6 +36,9 @@ public class SwapRequestConfiguration : IEntityTypeConfiguration<SwapRequest>
             .WithMany()
             .HasForeignKey(s => s.SkillWantedId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(s => new { s.SenderId, s.Status });
+        builder.HasIndex(s => new { s.ReceiverId, s.Status });
 
         builder.HasQueryFilter(s => !s.IsDeleted);
     }
