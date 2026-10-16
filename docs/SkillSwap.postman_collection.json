@@ -1,0 +1,239 @@
+{
+  "info": {
+    "name": "SkillSwap API",
+    "description": "SkillSwap graduation project. Flow: Auth/Register (or Login seeded member@skillswap.local / Member123!) -> copy accessToken to collection variable. Admin queue needs an Admin token.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5055" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "skillId", "value": "1" },
+    { "key": "userSkillId", "value": "" },
+    { "key": "swapId", "value": "" },
+    { "key": "pendingSkillId", "value": "" },
+    { "key": "availabilityId", "value": "" },
+    { "key": "favoriteId", "value": "" },
+    { "key": "reportId", "value": "" },
+    { "key": "receiverId", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/register",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Test User\",\n  \"email\": \"test@local.dev\",\n  \"password\": \"Test1234!\"\n}" }
+          }
+        },
+        {
+          "name": "Login (seeded member)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"member@skillswap.local\",\n  \"password\": \"Member123!\"\n}" }
+          }
+        },
+        {
+          "name": "Login (seeded admin)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@skillswap.local\",\n  \"password\": \"Admin123!\"\n}" }
+          }
+        },
+        {
+          "name": "Refresh",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/refresh",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/logout",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" }
+          }
+        },
+        {
+          "name": "Revoke family",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/revoke-family",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"familyId\": \"PASTE_FAMILY_ID\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catalog (public)",
+      "item": [
+        { "name": "List categories", "request": { "method": "GET", "url": "{{baseUrl}}/api/catalog/categories" } },
+        { "name": "List skills", "request": { "method": "GET", "url": "{{baseUrl}}/api/catalog/skills?categoryId=1&page=1&pageSize=20" } },
+        { "name": "Search skills", "request": { "method": "GET", "url": "{{baseUrl}}/api/catalog/skills/search?query=ph&page=1&pageSize=20" } }
+      ]
+    },
+    {
+      "name": "My skills",
+      "item": [
+        { "name": "List mine", "request": { "method": "GET", "url": "{{baseUrl}}/api/me/skills" } },
+        {
+          "name": "Add (Teach=1, Learn=2 / Beginner=1..Expert=4)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/me/skills",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"skillId\": {{skillId}},\n  \"type\": 1,\n  \"level\": 3\n}" }
+          }
+        },
+        { "name": "Remove", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/me/skills/{{userSkillId}}" } }
+      ]
+    },
+    {
+      "name": "Moderation",
+      "item": [
+        {
+          "name": "Request skill (user)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/moderation/skills/requests",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Kickboxing\",\n  \"categoryId\": 8\n}" }
+          }
+        },
+        { "name": "Pending (admin)", "request": { "method": "GET", "url": "{{baseUrl}}/api/moderation/skills/pending?page=1&pageSize=20" } },
+        { "name": "Approve (admin)", "request": { "method": "POST", "url": "{{baseUrl}}/api/moderation/skills/{{pendingSkillId}}/approve" } },
+        { "name": "Reject (admin)", "request": { "method": "POST", "url": "{{baseUrl}}/api/moderation/skills/{{pendingSkillId}}/reject" } }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        { "name": "Get mine", "request": { "method": "GET", "url": "{{baseUrl}}/api/me/profile" } },
+        {
+          "name": "Update mine",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/me/profile",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"bio\": \"Guitar learner, Photoshop teacher\",\n  \"location\": \"Cairo\",\n  \"timezone\": \"Africa/Cairo\"\n}" }
+          }
+        },
+        { "name": "Complete onboarding", "request": { "method": "POST", "url": "{{baseUrl}}/api/me/profile/complete-onboarding" } },
+        { "name": "List availabilities", "request": { "method": "GET", "url": "{{baseUrl}}/api/me/profile/availabilities" } },
+        {
+          "name": "Set availability (DayOfWeek 0-6)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/me/profile/availabilities",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"dayOfWeek\": 5,\n  \"startTime\": \"18:00:00\",\n  \"endTime\": \"20:00:00\"\n}" }
+          }
+        },
+        { "name": "Remove availability", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/me/profile/availabilities/{{availabilityId}}" } }
+      ]
+    },
+    {
+      "name": "Favorites",
+      "item": [
+        { "name": "List mine", "request": { "method": "GET", "url": "{{baseUrl}}/api/me/favorites" } },
+        {
+          "name": "Toggle",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/me/favorites/toggle",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"favoritedId\": \"{{receiverId}}\"\n}" }
+          }
+        },
+        { "name": "Remove", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/me/favorites/{{favoriteId}}" } }
+      ]
+    },
+    {
+      "name": "Swaps",
+      "item": [
+        {
+          "name": "Send",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/swaps",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"receiverId\": \"{{receiverId}}\",\n  \"skillOfferedId\": 1,\n  \"skillWantedId\": 2,\n  \"message\": \"Hi! Want to swap?\"\n}" }
+          }
+        },
+        { "name": "Mine (box=all|sent|received)", "request": { "method": "GET", "url": "{{baseUrl}}/api/swaps/mine?box=all&page=1&pageSize=20" } },
+        { "name": "Details", "request": { "method": "GET", "url": "{{baseUrl}}/api/swaps/{{swapId}}" } },
+        { "name": "Accept (receiver)", "request": { "method": "POST", "url": "{{baseUrl}}/api/swaps/{{swapId}}/accept" } },
+        { "name": "Reject (receiver)", "request": { "method": "POST", "url": "{{baseUrl}}/api/swaps/{{swapId}}/reject" } },
+        { "name": "Cancel (sender)", "request": { "method": "POST", "url": "{{baseUrl}}/api/swaps/{{swapId}}/cancel" } }
+      ]
+    },
+    {
+      "name": "Subscription",
+      "item": [
+        { "name": "Get mine", "request": { "method": "GET", "url": "{{baseUrl}}/api/me/subscription" } },
+        { "name": "Get quota", "request": { "method": "GET", "url": "{{baseUrl}}/api/me/subscription/quota" } },
+        {
+          "name": "Upgrade (Free=1, Premium=2)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/me/subscription/upgrade",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"planType\": 2\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Trust",
+      "item": [
+        { "name": "My blocks", "request": { "method": "GET", "url": "{{baseUrl}}/api/me/blocks" } },
+        {
+          "name": "Block",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/me/blocks",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"blockedId\": \"{{receiverId}}\"\n}" }
+          }
+        },
+        { "name": "Unblock", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/me/blocks/{{receiverId}}" } },
+        {
+          "name": "Report",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reports",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"reportedUserId\": \"{{receiverId}}\",\n  \"reason\": \"Spam messages\",\n  \"description\": \"Sent 10 identical swap requests\"\n}" }
+          }
+        },
+        { "name": "Reports (admin)", "request": { "method": "GET", "url": "{{baseUrl}}/api/admin/reports?page=1&pageSize=20" } },
+        {
+          "name": "Resolve (admin, 2=Resolved 3=Dismissed)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/admin/reports/{{reportId}}/resolve",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": 2\n}" }
+          }
+        }
+      ]
+    }
+  ]
+}

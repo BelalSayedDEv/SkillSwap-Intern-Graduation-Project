@@ -42,16 +42,19 @@ public class SkillCatalogService : ISkillCatalogService
             if (_cache.TryGetValue(key, out cached) && cached is not null)
             {
                 _logger.LogInformation("cache.hit-after-wait {Key}", key);
+
                 return Result<IReadOnlyList<CategoryDto>>.Success(cached);
             }
 
             _logger.LogInformation("cache.miss {Key}", key);
 
             var categories = await _uow.SkillCategories.ListOrderedAsync(cancellationToken);
+
             var dtos = categories.Select(c => new CategoryDto(c.Id, c.Name, c.IconUrl)).ToList();
 
 
             _cache.Set(key, (IReadOnlyList<CategoryDto>)dtos, SkillCatalogCacheKeys.CategoriesTtl);
+
             return Result<IReadOnlyList<CategoryDto>>.Success(dtos);
         }
         finally

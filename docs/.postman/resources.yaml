@@ -1,0 +1,14 @@
+workspace:
+  id: ""
+
+localResources:
+  collections:
+    - ../SkillSwap.postman_collection.json
+
+# Each entry here maps a local resource to one or more corresponding objects in Postman Cloud
+
+cloudResources:
+  collections:
+    ../SkillSwap.postman_collection.json: 55462157-69995fde-3c8a-42ca-a0a4-25f8bafaed14
+  globals:
+    ../postman/globals/workspace.globals.yaml: 7c077de5-131e-440a-836e-99d99cd972f1

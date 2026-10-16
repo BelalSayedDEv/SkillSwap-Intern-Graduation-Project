@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using SkillSwap.Application.Common.Interfaces;
-using SkillSwap.Infrastructure.Persistence;
 using System.Linq.Expressions;
 
 namespace SkillSwap.Infrastructure.Persistence.Repositories;
